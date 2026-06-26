@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Login | GYM 6O9</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background: var(--background); }
+    .login-container {
+      max-width: 450px;
+      margin: 120px auto 60px;
+      padding: 40px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <a href="index.html" class="nav-brand" style="text-decoration: none; color: white;">GYM 6O9</a>
+    <a href="join.html" class="btn btn-primary nav-cta">JOIN NOW</a>
+  </header>
+
+  <div class="container">
+    <div class="login-container">
+      <h2 style="margin-bottom: 10px;">Client Portal</h2>
+      <p class="text-muted" style="margin-bottom: 30px;">Login to track your active plans</p>
+      
+      <form id="loginForm" class="form-container" style="text-align: left; padding: 0; border: none; background: transparent;">
+        <div class="form-group">
+          <label class="form-label">Phone Number (WhatsApp)</label>
+          <input type="tel" id="phone" class="form-input" required placeholder="Enter your registered number">
+        </div>
+        <div class="form-group" style="margin-bottom: 30px;">
+          <label class="form-label">Member ID</label>
+          <input type="text" id="memberId" class="form-input" required placeholder="e.g. GYM6O9-123456">
+        </div>
+        
+        <button type="submit" id="loginBtn" class="btn btn-primary" style="width: 100%;">Login to Dashboard</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const phone = document.getElementById('phone').value;
+      const memberId = document.getElementById('memberId').value;
+      const btn = document.getElementById('loginBtn');
+      
+      btn.innerText = 'Verifying...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('http://localhost:3000/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, memberId })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          localStorage.setItem('gym6o9_memberId', data.memberId);
+          window.location.href = 'dashboard.html';
+        } else {
+          alert(data.message || 'Invalid credentials');
+          btn.innerText = 'Login to Dashboard';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error connecting to server.');
+        btn.innerText = 'Login to Dashboard';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Dashboard | GYM 6O9</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background: var(--background); }
+    .dashboard-container {
+      max-width: 800px;
+      margin: 120px auto 60px;
+    }
+    .profile-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 50px;
+      font-size: 0.875rem;
+      font-weight: bold;
+      background: rgba(46, 204, 113, 0.2);
+      color: #2ecc71;
+    }
+    .plan-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .info-box {
+      background: rgba(255,255,255,0.02);
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .info-label { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 5px; }
+    .info-value { font-size: 1.25rem; font-weight: bold; }
+    
+    @media (max-width: 600px) {
+      .plan-info { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <a href="index.html" class="nav-brand" style="text-decoration: none; color: white;">GYM 6O9</a>
+    <button onclick="logout()" class="btn btn-outline" style="padding: 10px 20px; font-size: 0.875rem;">Logout</button>
+  </header>
+
+  <div class="container dashboard-container" id="loadingState">
+    <div class="text-center">
+      <h2 style="color: var(--text-muted);">Loading Dashboard...</h2>
+    </div>
+  </div>
+
+  <div class="container dashboard-container hidden" id="dashboardContent">
+    <div class="profile-card">
+      <div class="flex-between" style="align-items: flex-start; margin-bottom: 20px;">
+        <div>
+          <h1 id="clientName" style="font-size: 2rem; margin-bottom: 5px;">Welcome</h1>
+          <p class="text-muted">Member ID: <span id="clientMemberId" style="color: white;"></span></p>
+        </div>
+        <div class="status-badge" id="clientStatus">Active</div>
+      </div>
+      
+      <div style="height: 1px; background: var(--surface-border); margin: 20px 0;"></div>
+
+      <h3 style="color: var(--primary);">Current Subscription</h3>
+      
+      <div class="plan-info">
+        <div class="info-box">
+          <div class="info-label">Plan Type</div>
+          <div class="info-value" id="clientPlan">--</div>
+        </div>
+        <div class="info-box">
+          <div class="info-label">Payment Method</div>
+          <div class="info-value" id="clientPayment">--</div>
+        </div>
+        <div class="info-box">
+          <div class="info-label">Start Date</div>
+          <div class="info-value" id="clientStart">--</div>
+        </div>
+        <div class="info-box">
+          <div class="info-label">Valid Until</div>
+          <div class="info-value text-primary" id="clientExpiry">--</div>
+        </div>
+      </div>
+      
+      <div style="margin-top: 40px; text-align: center;">
+        <a href="join.html" class="btn btn-primary">Renew / Upgrade Plan</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const memberId = localStorage.getItem('gym6o9_memberId');
+    
+    if (!memberId) {
+      window.location.href = 'login.html';
+    } else {
+      fetchDashboardData(memberId);
+    }
+
+    async function fetchDashboardData(id) {
+      try {
+        const res = await fetch('http://localhost:3000/api/me/' + id);
+        const data = await res.json();
+        
+        if (data.success) {
+          const m = data.member;
+          document.getElementById('clientName').innerText = `Welcome back, ${m.name}!`;
+          document.getElementById('clientMemberId').innerText = m.memberId;
+          document.getElementById('clientPlan').innerText = m.planType;
+          document.getElementById('clientPayment').innerText = m.paymentMethod;
+          document.getElementById('clientStart').innerText = new Date(m.startDate).toLocaleDateString();
+          document.getElementById('clientExpiry').innerText = new Date(m.expiryDate).toLocaleDateString();
+          
+          const statusBadge = document.getElementById('clientStatus');
+          statusBadge.innerText = m.status;
+          if (m.status !== 'Active') {
+            statusBadge.style.background = 'rgba(255, 193, 7, 0.2)';
+            statusBadge.style.color = '#ffc107';
+          }
+
+          document.getElementById('loadingState').classList.add('hidden');
+          document.getElementById('dashboardContent').classList.remove('hidden');
+        } else {
+          logout();
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById('loadingState').innerHTML = '<h2 style="color: #ff4444; text-align: center;">Error loading dashboard. Is the server running?</h2>';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('gym6o9_memberId');
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>

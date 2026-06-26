@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join | GYM 6O9</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    /* Page specific adjustments */
+    body { background: var(--background); }
+    .page-wrapper {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 100px;
+    }
+    .bg-accent {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 400px;
+      height: 400px;
+      background: var(--primary);
+      filter: blur(150px);
+      border-radius: 50%;
+      opacity: 0.1;
+      z-index: 0;
+    }
+    .content-area {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+    }
+    
+    .back-link {
+      display: inline-block;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+      transition: color 0.3s;
+    }
+    .back-link:hover { color: var(--foreground); }
+  </style>
+</head>
+<body>
+
+  <div class="page-wrapper">
+    <div class="bg-accent"></div>
+
+    <div class="content-area container" style="max-width: 600px;">
+      
+      <!-- Success State (Hidden initially) -->
+      <div id="successState" class="text-center hidden" style="padding-top: 60px;">
+        <div style="width: 100px; height: 100px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; font-size: 40px; color: white;">✓</div>
+        <h1 class="hero-title">Welcome to the Family!</h1>
+        <p class="text-muted" style="font-size: 1.25rem; margin-bottom: 20px;">Your payment was successful and your plan is active.</p>
+        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; max-width: 400px; margin: 0 auto 40px;">
+          <p style="margin-bottom: 10px; color: var(--text-muted);">Your Member ID:</p>
+          <h2 id="successMemberId" style="color: var(--primary); font-size: 2rem; letter-spacing: 2px;"></h2>
+          <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 10px;">Please save this ID. You will need it to log in to your dashboard.</p>
+        </div>
+        <a href="login.html" class="btn" style="background: white; color: black; margin-right: 15px;">Go to Dashboard</a>
+        <a href="index.html" class="btn btn-outline">Return Home</a>
+      </div>
+
+      <!-- Form Container -->
+      <div id="formContainer">
+        <a href="index.html" class="back-link">&larr; Back to Home</a>
+        <h1 style="font-size: 2.5rem; margin-bottom: 10px;">Start Your Journey</h1>
+        <div class="section-divider" style="margin: 0 0 40px 0; width: 60px;"></div>
+
+        <!-- Stepper -->
+        <div class="stepper">
+          <div class="step" id="indicator1"><div class="step-inner"></div></div>
+          <div class="step" id="indicator2"><div class="step-inner"></div></div>
+          <div class="step" id="indicator3"><div class="step-inner"></div></div>
+          <div class="step" id="indicator4"><div class="step-inner"></div></div>
+        </div>
+
+        <form id="joinForm" class="form-container">
+          
+          <!-- Step 1: Personal Details -->
+          <div id="step1">
+            <h2 class="mb-8">Personal Details</h2>
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="nameInput" class="form-input" placeholder="Enter your full name" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input type="tel" id="phoneInput" class="form-input" placeholder="+91" required>
+            </div>
+          </div>
+
+          <!-- Step 2: Plan Selection -->
+          <div id="step2" class="hidden">
+            <h2 class="mb-8">Choose Your Plan</h2>
+            <div class="plan-grid">
+              <div class="plan-card selected" data-plan="1 Month">
+                <h3 style="font-size: 1.25rem;">1 Month</h3>
+              </div>
+              <div class="plan-card" data-plan="3 Months">
+                <h3 style="font-size: 1.25rem;">3 Months</h3>
+              </div>
+              <div class="plan-card" data-plan="6 Months">
+                <h3 style="font-size: 1.25rem;">6 Months</h3>
+              </div>
+              <div class="plan-card" data-plan="1 Year">
+                <h3 style="font-size: 1.25rem;">1 Year</h3>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Date & Summary -->
+          <div id="step3" class="hidden">
+            <h2 class="mb-8">Confirm Start Date</h2>
+            <div class="form-group">
+              <label class="form-label">When do you want to start?</label>
+              <input type="date" id="dateInput" class="form-input" required>
+            </div>
+
+            <div class="summary-box">
+              <div class="form-label" style="text-transform: uppercase; letter-spacing: 1px;">Summary</div>
+              <div class="summary-row">
+                <span class="text-muted">Name:</span>
+                <span id="sumName" style="font-weight: 500;"></span>
+              </div>
+              <div class="summary-row">
+                <span class="text-muted">Phone:</span>
+                <span id="sumPhone" style="font-weight: 500;"></span>
+              </div>
+              <div class="summary-row">
+                <span class="text-muted">Plan:</span>
+                <span id="sumPlan" class="text-primary" style="font-weight: bold;"></span>
+              </div>
+              <div class="summary-row total">
+                <span class="text-muted">Start Date:</span>
+                <span id="sumDate" style="font-weight: 500;"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: Payment -->
+          <div id="step4" class="hidden">
+            <h2 class="mb-8">Payment Method</h2>
+            
+            <div class="plan-grid" style="margin-bottom: 30px;">
+              <div class="plan-card selected payment-card" data-method="Razorpay">
+                <h3 style="font-size: 1.1rem;">Pay Now (Cards/UPI)</h3>
+              </div>
+              <div class="plan-card payment-card" data-method="Cash">
+                <h3 style="font-size: 1.1rem;">Pay at Gym</h3>
+              </div>
+            </div>
+
+            <div id="razorpaySection" class="text-center">
+              <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 12px; margin-bottom: 15px;">
+                <div style="font-size: 40px; margin-bottom: 15px;">💳</div>
+                <p>Secure automatic payment powered by Razorpay.</p>
+                <p class="mt-2 text-muted">Amount to pay: <span id="payAmount" class="text-primary font-bold" style="font-size: 1.25rem;">₹1,000</span></p>
+              </div>
+            </div>
+            
+            <div id="cashSection" class="text-center hidden" style="padding: 30px; background: rgba(255,255,255,0.05); border-radius: 12px;">
+              <div style="font-size: 40px; margin-bottom: 15px;">💵</div>
+              <p>You can pay directly at the front desk when you visit for your first session.</p>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex-between" style="margin-top: 40px;">
+            <button type="button" id="btnBack" class="btn btn-outline hidden">Back</button>
+            <div style="flex:1"></div> <!-- spacer -->
+            <button type="submit" id="btnNext" class="btn btn-primary">Next Step</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

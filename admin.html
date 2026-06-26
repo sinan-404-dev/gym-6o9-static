@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | GYM 6O9</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { padding-top: 60px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <a href="index.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; display: inline-block;">&larr; Back to Site</a>
+    
+    <h1 style="font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 10px;">Admin Dashboard</h1>
+    <div class="section-divider" style="margin: 0 0 40px 0;"></div>
+
+    <div class="table-container">
+      <div class="flex-between" style="padding: 24px; border-bottom: 1px solid var(--surface-border);">
+        <h2 style="font-size: 1.25rem;">Active Members</h2>
+        <span style="background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 0.875rem; font-weight: bold;">
+          Total: <span id="totalMembers">Loading...</span>
+        </span>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Expiry Date</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="membersTableBody">
+          <tr>
+            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 40px;">Fetching records...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
