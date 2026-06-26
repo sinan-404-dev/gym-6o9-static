@@ -23,8 +23,8 @@
       <a href="#facilities">Facilities</a>
       <a href="#membership">Membership</a>
       <a href="#contact">Contact</a>
-      <a href="login.html" style="color: var(--primary); font-weight: bold; margin-left: 15px;">Client Portal</a>
-      <a href="join.html" class="btn btn-primary nav-cta-mobile" style="display: none; margin-top: 20px;">JOIN NOW</a>
+      <a href="login.html" style="color: var(--primary); font-weight: bold;">Client Portal</a>
+      <a href="join.html" class="btn btn-primary nav-cta-mobile">JOIN NOW</a>
     </nav>
     <a href="join.html" class="btn btn-primary nav-cta" id="desktop-cta">JOIN NOW</a>
   </header>
@@ -65,9 +65,9 @@
           <!-- Monthly -->
           <div class="pricing-card">
             <h3 class="pricing-title">Monthly</h3>
-            <div class="pricing-price">₹1,000<span class="price-duration">/mo</span></div>
+            <div class="pricing-price"><span id="display-price-1m">₹1,000</span><span class="price-duration">/mo</span></div>
             <p class="pricing-desc">Basic gym access for a solid start.</p>
-            <ul class="pricing-features">
+            <ul class="pricing-features" id="features-1m">
               <li><span class="check-icon">✓</span> Full Gym Access</li>
             </ul>
             <div class="pricing-action">
@@ -78,9 +78,9 @@
           <!-- Quarterly -->
           <div class="pricing-card">
             <h3 class="pricing-title">Quarterly</h3>
-            <div class="pricing-price">₹2,999<span class="price-duration">/3 mo</span></div>
+            <div class="pricing-price"><span id="display-price-3m">₹2,999</span><span class="price-duration">/3 mo</span></div>
             <p class="pricing-desc">Commit for a season, bring a friend.</p>
-            <ul class="pricing-features">
+            <ul class="pricing-features" id="features-3m">
               <li><span class="check-icon">✓</span> Full Gym Access</li>
               <li><span class="check-icon">✓</span> 1 Guest Pass/month</li>
             </ul>
@@ -92,9 +92,9 @@
           <!-- Half-Yearly -->
           <div class="pricing-card">
             <h3 class="pricing-title">Half-Yearly</h3>
-            <div class="pricing-price">₹5,499<span class="price-duration">/6 mo</span></div>
+            <div class="pricing-price"><span id="display-price-6m">₹5,499</span><span class="price-duration">/6 mo</span></div>
             <p class="pricing-desc">Serious dedication with added perks.</p>
-            <ul class="pricing-features">
+            <ul class="pricing-features" id="features-6m">
               <li><span class="check-icon">✓</span> Full Gym Access</li>
               <li><span class="check-icon">✓</span> 2 Guest Passes/month</li>
               <li><span class="check-icon">✓</span> Basic Health Consult</li>
@@ -108,9 +108,9 @@
           <div class="pricing-card pricing-card-elite">
             <div class="best-value-badge">BEST VALUE</div>
             <h3 class="pricing-title text-primary">Elite Annual</h3>
-            <div class="pricing-price">₹9,999<span class="price-duration">/yr</span></div>
+            <div class="pricing-price"><span id="display-price-1y">₹9,999</span><span class="price-duration">/yr</span></div>
             <p class="pricing-desc">Total domination. The ultimate package.</p>
-            <ul class="pricing-features">
+            <ul class="pricing-features" id="features-1y">
               <li><span class="check-icon text-primary">✓</span> Full Gym Access</li>
               <li><span class="check-icon text-primary">✓</span> Unlimited Guest Passes</li>
               <li><span class="check-icon text-primary">✓</span> Full Health Consulting</li>

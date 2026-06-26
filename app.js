@@ -26,6 +26,63 @@ function calculateExpiryDate(startDate, planType) {
   return expiryDate;
 }
 
+let globalPrices = {
+  "1 Month": "₹1,000",
+  "3 Months": "₹2,999",
+  "6 Months": "₹5,499",
+  "1 Year": "₹9,999"
+};
+
+let globalFeatures = {
+  "1 Month": "Full Gym Access",
+  "3 Months": "Full Gym Access\n1 Guest Pass/month",
+  "6 Months": "Full Gym Access\n2 Guest Passes/month\nBasic Health Consult",
+  "1 Year": "Full Gym Access\nUnlimited Guest Passes\nFull Health Consulting\nPriority Support"
+};
+
+const renderFeatures = (featuresStr, isPrimary = false) => {
+  if (!featuresStr) return '';
+  return featuresStr.split('\n').filter(f => f.trim()).map(f => {
+    return `<li><span class="check-icon ${isPrimary ? 'text-primary' : ''}">✓</span> ${f.trim()}</li>`;
+  }).join('');
+};
+
+async function fetchDynamicPrices() {
+  try {
+    const res = await fetch('http://localhost:3000/api/prices');
+    const data = await res.json();
+    if (data.success && data.prices) {
+      globalPrices = data.prices;
+      
+      // Update Index Page if elements exist
+      if (document.getElementById('display-price-1m')) document.getElementById('display-price-1m').innerText = globalPrices["1 Month"];
+      if (document.getElementById('display-price-3m')) document.getElementById('display-price-3m').innerText = globalPrices["3 Months"];
+      if (document.getElementById('display-price-6m')) document.getElementById('display-price-6m').innerText = globalPrices["6 Months"];
+      if (document.getElementById('display-price-1y')) document.getElementById('display-price-1y').innerText = globalPrices["1 Year"];
+    }
+  } catch (err) {
+    console.error("Could not fetch dynamic prices", err);
+  }
+}
+
+async function fetchDynamicFeatures() {
+  try {
+    const res = await fetch('http://localhost:3000/api/features');
+    const data = await res.json();
+    if (data.success && data.features) {
+      globalFeatures = data.features;
+      
+      // Update Index Page Features
+      if (document.getElementById('features-1m')) document.getElementById('features-1m').innerHTML = renderFeatures(globalFeatures["1 Month"]);
+      if (document.getElementById('features-3m')) document.getElementById('features-3m').innerHTML = renderFeatures(globalFeatures["3 Months"]);
+      if (document.getElementById('features-6m')) document.getElementById('features-6m').innerHTML = renderFeatures(globalFeatures["6 Months"]);
+      if (document.getElementById('features-1y')) document.getElementById('features-1y').innerHTML = renderFeatures(globalFeatures["1 Year"], true);
+    }
+  } catch (err) {
+    console.error("Could not fetch dynamic features", err);
+  }
+}
+
 /**
  * Multi-Step Form Logic for join.html
  */
@@ -64,13 +121,8 @@ function initJoinForm() {
   document.getElementById('dateInput').value = formData.startDate;
   document.getElementById('dateInput').addEventListener('input', (e) => formData.startDate = e.target.value);
 
-  // Plan Selection
-  const planPrices = {
-    "1 Month": "₹1,000",
-    "3 Months": "₹2,999",
-    "6 Months": "₹5,499",
-    "1 Year": "₹9,999"
-  };
+  // Plan Selection uses globalPrices
+
 
   document.querySelectorAll('.plan-card:not(.payment-card)').forEach(card => {
     card.addEventListener('click', (e) => {
@@ -80,7 +132,7 @@ function initJoinForm() {
       formData.planType = target.dataset.plan;
       
       // Update payment amounts
-      const price = planPrices[formData.planType];
+      const price = globalPrices[formData.planType];
       const payAmountEl = document.getElementById('payAmount');
       if(payAmountEl) payAmountEl.innerText = price;
     });
@@ -157,7 +209,7 @@ function initJoinForm() {
       btnNext.disabled = true;
       btnBack.disabled = true;
 
-      const amountStr = planPrices[formData.planType].replace(/[^0-9]/g, '');
+      const amountStr = globalPrices[formData.planType].replace(/[^0-9]/g, '');
       const amount = parseInt(amountStr, 10);
 
       try {
@@ -174,7 +226,7 @@ function initJoinForm() {
         const startDateObj = new Date(formData.startDate);
         const expiryDateObj = calculateExpiryDate(startDateObj, formData.planType);
         const memberData = {
-          memberId: `GYM6O9-${Date.now().toString().slice(-6)}`,
+          memberId: `GYM-${Math.floor(1000 + Math.random() * 9000)}`,
           name: formData.name,
           whatsappNumber: formData.phoneNumber,
           planType: formData.planType,
@@ -276,67 +328,167 @@ function initJoinForm() {
 /**
  * Admin Dashboard Logic for admin.html
  */
-function initAdminDashboard() {
+async function initAdminDashboard() {
   const tableBody = document.getElementById('membersTableBody');
   if (!tableBody) return;
 
-  // Dummy data (simulating Firestore fetch)
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const nextMonth = new Date(today);
-  nextMonth.setMonth(nextMonth.getMonth() + 1);
+  // 1. Setup Pricing Editor
+  if (document.getElementById('price-1m')) {
+    document.getElementById('price-1m').value = globalPrices["1 Month"];
+    document.getElementById('price-3m').value = globalPrices["3 Months"];
+    document.getElementById('price-6m').value = globalPrices["6 Months"];
+    document.getElementById('price-1y').value = globalPrices["1 Year"];
 
-  const members = [
-    { id: "GYM-413064", name: "Rahul M", phoneNumber: "917025506123", expiryDate: today },
-    { id: "GYM-981242", name: "Aisha K", phoneNumber: "917025506123", expiryDate: tomorrow },
-    { id: "GYM-102931", name: "Safeer T", phoneNumber: "917025506123", expiryDate: nextMonth },
-  ];
-
-  // Helper to check expiry
-  const isExpiringSoon = (expiry) => {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const exp = new Date(expiry);
-    exp.setHours(0, 0, 0, 0);
-    const diffDays = Math.ceil((exp.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
-    return diffDays >= 0 && diffDays <= 3;
-  };
-
-  // Helper for WhatsApp link
-  const getWhatsAppLink = (member) => {
-    const dateStr = member.expiryDate.toLocaleDateString();
-    const text = `Hi ${member.name}, your subscription at Gym 6O9 expires on ${dateStr}. Tap here to renew: https://gym6o9.com/renew`;
-    return `https://wa.me/${member.phoneNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
-  };
-
-  // Render Table
-  setTimeout(() => {
-    tableBody.innerHTML = ''; // clear loading
-    document.getElementById('totalMembers').innerText = members.length;
-
-    members.forEach(member => {
-      const expiring = isExpiringSoon(member.expiryDate);
-      const row = document.createElement('tr');
+    document.getElementById('savePricesBtn').addEventListener('click', async (e) => {
+      const btn = e.target;
+      btn.innerText = 'Saving...';
+      const newPrices = {
+        "1 Month": document.getElementById('price-1m').value,
+        "3 Months": document.getElementById('price-3m').value,
+        "6 Months": document.getElementById('price-6m').value,
+        "1 Year": document.getElementById('price-1y').value
+      };
       
-      let actionHtml = '';
-      if (expiring) {
-        actionHtml = `<a href="${getWhatsAppLink(member)}" target="_blank" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem;">WhatsApp</a>`;
+      try {
+        const res = await fetch('http://localhost:3000/api/prices', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prices: newPrices })
+        });
+        if (res.ok) {
+          alert('Prices updated successfully!');
+          globalPrices = newPrices;
+        }
+      } catch (err) {
+        alert('Failed to save prices');
       }
-
-      row.innerHTML = `
-        <td style="font-weight: 500;">${member.name}</td>
-        <td class="text-muted">${member.phoneNumber}</td>
-        <td class="${expiring ? 'status-expiring' : ''}">${member.expiryDate.toLocaleDateString()}</td>
-        <td style="text-align: right;">${actionHtml}</td>
-      `;
-      tableBody.appendChild(row);
+      btn.innerText = 'Save New Prices';
     });
-  }, 1000);
+  }
+
+  // 1b. Setup Features Editor
+  if (document.getElementById('features-1m-input')) {
+    document.getElementById('features-1m-input').value = globalFeatures["1 Month"];
+    document.getElementById('features-3m-input').value = globalFeatures["3 Months"];
+    document.getElementById('features-6m-input').value = globalFeatures["6 Months"];
+    document.getElementById('features-1y-input').value = globalFeatures["1 Year"];
+
+    document.getElementById('saveFeaturesBtn').addEventListener('click', async (e) => {
+      const btn = e.target;
+      btn.innerText = 'Saving...';
+      const newFeatures = {
+        "1 Month": document.getElementById('features-1m-input').value,
+        "3 Months": document.getElementById('features-3m-input').value,
+        "6 Months": document.getElementById('features-6m-input').value,
+        "1 Year": document.getElementById('features-1y-input').value
+      };
+      
+      try {
+        const res = await fetch('http://localhost:3000/api/features', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ features: newFeatures })
+        });
+        if (res.ok) {
+          alert('Features updated successfully!');
+          globalFeatures = newFeatures;
+        }
+      } catch (err) {
+        alert('Failed to save features');
+      }
+      btn.innerText = 'Save New Features';
+    });
+  }
+
+  // 2. Fetch Members
+  try {
+    const res = await fetch('http://localhost:3000/api/admin/members');
+    const data = await res.json();
+    let allMembers = data.members || [];
+    
+    // Helper for WhatsApp link
+    const getWhatsAppLink = (member, daysLeft) => {
+      const dateStr = new Date(member.expiryDate).toLocaleDateString();
+      let text = '';
+      if (daysLeft < 0) {
+        text = `Hi ${member.name}, your subscription at Gym 6O9 expired on ${dateStr}. Tap here to renew: https://gym6o9.com/renew`;
+      } else {
+        text = `Hi ${member.name}, your subscription at Gym 6O9 expires in ${daysLeft} days (on ${dateStr}). Tap here to renew: https://gym6o9.com/renew`;
+      }
+      return `https://wa.me/${member.whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
+    };
+
+    const renderTable = (filterType) => {
+      tableBody.innerHTML = ''; 
+      
+      const today = new Date();
+      today.setHours(0,0,0,0);
+
+      // Filter Logic
+      let filteredMembers = allMembers.filter(member => {
+        const expDate = new Date(member.expiryDate);
+        expDate.setHours(0,0,0,0);
+        const diffTime = expDate.getTime() - today.getTime();
+        const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        member._daysLeft = daysLeft; // save for rendering
+        
+        if (filterType === 'expired') return daysLeft < 0;
+        if (filterType === 'expiring-3') return daysLeft >= 0 && daysLeft <= 3;
+        return true; // 'all'
+      });
+
+      document.getElementById('totalMembers').innerText = filteredMembers.length;
+
+      filteredMembers.forEach(member => {
+        const isExpired = member._daysLeft < 0;
+        const daysLeftText = isExpired ? 'Expired' : `${member._daysLeft} Days`;
+        const daysLeftColor = isExpired ? '#ff4444' : (member._daysLeft <= 3 ? '#F26522' : '#2ecc71');
+        
+        const btnStyle = isExpired ? 'background: #ff4444; border-color: #ff4444;' : 'background: #2ecc71; border-color: #2ecc71;';
+        const row = document.createElement('tr');
+
+        const planName = member.planType || 'N/A';
+        const planPrice = globalPrices[planName] || '';
+        const memberIdStr = member.memberId || 'N/A';
+
+        row.innerHTML = `
+          <td data-label="ID" style="font-weight: bold; color: var(--primary);">${memberIdStr}</td>
+          <td data-label="Name" style="font-weight: 500;">${member.name}</td>
+          <td data-label="Phone" class="text-muted">${member.whatsappNumber}</td>
+          <td data-label="Plan" class="text-primary">${planName} <span style="font-size:0.8rem; color:var(--text-muted)">(${planPrice})</span></td>
+          <td data-label="Expiry Date" class="${isExpired ? 'status-expiring' : ''}">${new Date(member.expiryDate).toLocaleDateString()}</td>
+          <td data-label="Days Left" style="color: ${daysLeftColor}; font-weight: bold;">${daysLeftText}</td>
+          <td data-label="Action" style="text-align: right;">
+            <a href="${getWhatsAppLink(member, member._daysLeft)}" target="_blank" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem; ${btnStyle}">WhatsApp</a>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      if (filteredMembers.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">No members found.</td></tr>';
+      }
+    };
+
+    // Initial Render
+    renderTable('all');
+
+    // Filter Event Listener
+    if(document.getElementById('memberFilter')) {
+      document.getElementById('memberFilter').addEventListener('change', (e) => {
+        renderTable(e.target.value);
+      });
+    }
+
+  } catch (err) {
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #ff4444; padding: 40px;">Error loading members.</td></tr>';
+  }
 }
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await fetchDynamicPrices();
+  await fetchDynamicFeatures();
   initJoinForm();
   initAdminDashboard();
 });

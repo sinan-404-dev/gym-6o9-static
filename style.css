@@ -33,7 +33,7 @@ body {
 
 /* Layout Utilities */
 .container {
-  max-w-width: 1200px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
   padding: 0 20px;
@@ -149,6 +149,10 @@ h1, h2, h3, h4 {
 .nav-cta {
   padding: 12px 24px;
   font-size: 0.875rem;
+}
+.nav-cta-mobile {
+  display: none;
+  margin-top: 20px;
 }
 
 /* Hero Section */
@@ -705,5 +709,46 @@ tr:hover { background: rgba(255,255,255,0.02); }
     flex-direction: column;
     align-items: flex-start !important;
     gap: 15px;
+  }
+  
+  /* Admin Responsive Table */
+  .table-container table,
+  .table-container thead,
+  .table-container tbody,
+  .table-container th,
+  .table-container td,
+  .table-container tr {
+    display: block;
+  }
+  .table-container thead tr {
+    display: none;
+  }
+  .table-container tr {
+    border: 1px solid var(--surface-border);
+    margin-bottom: 15px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .table-container td {
+    border: none;
+    border-bottom: 1px solid var(--surface-border);
+    position: relative;
+    padding-left: 45%;
+    text-align: right;
+    min-height: 50px;
+  }
+  .table-container td:before {
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%);
+    width: 40%;
+    padding-right: 10px;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: bold;
+    color: var(--text-muted);
+    content: attr(data-label);
   }
 }

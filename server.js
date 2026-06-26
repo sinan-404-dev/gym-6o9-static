@@ -3,22 +3,16 @@ const cors = require('cors');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const path = require('path');
-const fs = require('fs');
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
 require('dotenv').config();
 
-const DB_FILE = path.join(__dirname, 'database.json');
-
-// Helper to read DB
-const readDB = () => {
-  if (!fs.existsSync(DB_FILE)) return { members: [] };
-  const data = fs.readFileSync(DB_FILE, 'utf8');
-  return JSON.parse(data);
-};
-
-// Helper to write DB
-const writeDB = (data) => {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-};
+// Initialize Firebase
+const serviceAccount = require('./serviceAccountKey.json');
+initializeApp({
+  credential: cert(serviceAccount)
+});
+const db = getFirestore();
 
 const app = express();
 
@@ -54,7 +48,7 @@ app.post('/api/create-order', async (req, res) => {
 });
 
 // Verify Payment Endpoint
-app.post('/api/verify-payment', (req, res) => {
+app.post('/api/verify-payment', async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, memberData } = req.body;
     
@@ -66,11 +60,8 @@ app.post('/api/verify-payment', (req, res) => {
       .digest("hex");
 
     if (razorpay_signature === expectedSign) {
-      // Payment is authentic!
-      // Save member to database
-      const db = readDB();
-      db.members.push(memberData);
-      writeDB(db);
+      // Payment is authentic! Save member to Firestore
+      await db.collection('members').doc(memberData.memberId).set(memberData);
 
       return res.status(200).json({ success: true, message: "Payment verified successfully", memberId: memberData.memberId });
     } else {
@@ -83,27 +74,105 @@ app.post('/api/verify-payment', (req, res) => {
 });
 
 // Login Endpoint
-app.post('/api/login', (req, res) => {
-  const { phone, memberId } = req.body;
-  const db = readDB();
-  const member = db.members.find(m => m.whatsappNumber === phone && m.memberId === memberId);
-  
-  if (member) {
-    res.json({ success: true, memberId: member.memberId });
-  } else {
-    res.status(401).json({ success: false, message: "Invalid Phone Number or Member ID" });
+app.post('/api/login', async (req, res) => {
+  try {
+    const { phone, memberId } = req.body;
+    const doc = await db.collection('members').doc(memberId).get();
+    
+    if (doc.exists && doc.data().whatsappNumber === phone) {
+      res.json({ success: true, memberId });
+    } else {
+      res.status(401).json({ success: false, message: "Invalid Phone Number or Member ID" });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
 // Get Member Info Endpoint
-app.get('/api/me/:memberId', (req, res) => {
-  const db = readDB();
-  const member = db.members.find(m => m.memberId === req.params.memberId);
-  
-  if (member) {
-    res.json({ success: true, member });
+app.get('/api/me/:memberId', async (req, res) => {
+  try {
+    const doc = await db.collection('members').doc(req.params.memberId).get();
+    
+    if (doc.exists) {
+      res.json({ success: true, member: doc.data() });
+    } else {
+      res.status(404).json({ success: false, message: "Member not found" });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Admin Login Endpoint
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body;
+  if (password === process.env.ADMIN_PASSWORD) {
+    res.json({ success: true, token: "admin-auth-token" });
   } else {
-    res.status(404).json({ success: false, message: "Member not found" });
+    res.status(401).json({ success: false, message: "Invalid Password" });
+  }
+});
+
+// Admin Get Members Endpoint
+app.get('/api/admin/members', async (req, res) => {
+  try {
+    const snapshot = await db.collection('members').get();
+    const members = [];
+    snapshot.forEach(doc => {
+      members.push(doc.data());
+    });
+    res.json({ success: true, members });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Pricing Endpoints
+app.get('/api/prices', async (req, res) => {
+  try {
+    const doc = await db.collection('config').doc('prices').get();
+    if (doc.exists) {
+      res.json({ success: true, prices: doc.data().prices });
+    } else {
+      res.json({ success: true, prices: {} });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+app.post('/api/prices', async (req, res) => {
+  try {
+    const { prices } = req.body;
+    await db.collection('config').doc('prices').set({ prices });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Features Endpoints
+app.get('/api/features', async (req, res) => {
+  try {
+    const doc = await db.collection('config').doc('features').get();
+    if (doc.exists) {
+      res.json({ success: true, features: doc.data().features });
+    } else {
+      res.json({ success: true, features: {} });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+app.post('/api/features', async (req, res) => {
+  try {
+    const { features } = req.body;
+    await db.collection('config').doc('features').set({ features });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
