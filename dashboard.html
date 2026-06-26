@@ -110,7 +110,7 @@
 
     async function fetchDashboardData(id) {
       try {
-        const res = await fetch('http://localhost:3000/api/me/' + id);
+        const res = await fetch('/api/me/' + id);
         const data = await res.json();
         
         if (data.success) {

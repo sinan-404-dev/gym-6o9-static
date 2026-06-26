@@ -49,7 +49,7 @@ const renderFeatures = (featuresStr, isPrimary = false) => {
 
 async function fetchDynamicPrices() {
   try {
-    const res = await fetch('http://localhost:3000/api/prices');
+    const res = await fetch('/api/prices');
     const data = await res.json();
     if (data.success && data.prices) {
       globalPrices = data.prices;
@@ -67,7 +67,7 @@ async function fetchDynamicPrices() {
 
 async function fetchDynamicFeatures() {
   try {
-    const res = await fetch('http://localhost:3000/api/features');
+    const res = await fetch('/api/features');
     const data = await res.json();
     if (data.success && data.features) {
       globalFeatures = data.features;
@@ -214,7 +214,7 @@ function initJoinForm() {
 
       try {
         // 1. Create order on backend
-        const response = await fetch('http://localhost:3000/api/create-order', {
+        const response = await fetch('/api/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount: amount })
@@ -247,7 +247,7 @@ function initJoinForm() {
           handler: async function (response) {
             btnNext.innerText = 'Verifying Payment...';
             // 3. Verify Payment
-            const verifyRes = await fetch('http://localhost:3000/api/verify-payment', {
+            const verifyRes = await fetch('/api/verify-payment', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -350,7 +350,7 @@ async function initAdminDashboard() {
       };
       
       try {
-        const res = await fetch('http://localhost:3000/api/prices', {
+        const res = await fetch('/api/prices', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prices: newPrices })
@@ -384,7 +384,7 @@ async function initAdminDashboard() {
       };
       
       try {
-        const res = await fetch('http://localhost:3000/api/features', {
+        const res = await fetch('/api/features', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ features: newFeatures })
@@ -402,7 +402,7 @@ async function initAdminDashboard() {
 
   // 2. Fetch Members
   try {
-    const res = await fetch('http://localhost:3000/api/admin/members');
+    const res = await fetch('/api/admin/members');
     const data = await res.json();
     let allMembers = data.members || [];
     
